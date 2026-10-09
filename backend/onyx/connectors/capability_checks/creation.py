@@ -64,6 +64,7 @@ logger = setup_logger()
 CREATION_BLOCKING_BUDGET_SECONDS = 3.0
 
 _REJECTED_MESSAGE = "Did not finish before the connector was rejected."
+_DISCOVERY_NOT_RUN_MESSAGE = "Not run when the connector is created; re-run the checks."
 
 
 def _cached_draft_results(
@@ -388,8 +389,10 @@ def run_named_checks_within_budget(
 
     Fresh draft results for the same form are reused and count as finished at
     once: with ``cc_pair_id``, those of the pair's dry runs. The other checks
-    run for at most ``CREATION_BLOCKING_BUDGET_SECONDS``. Does not claim or
-    store a report row and does not start a background run.
+    run for at most ``CREATION_BLOCKING_BUDGET_SECONDS``. A discovery check
+    with no reused result does not run: creation and the first index attempt
+    never wait on it. Does not claim or store a report row and does not start a
+    background run.
     """
     checks = get_capability_checks(source)
     reused = _fresh_draft_results(
@@ -403,7 +406,9 @@ def run_named_checks_within_budget(
     finished, unfinished = _run_checks_within_budget(
         list(
             dict.fromkeys(
-                check.check_id for check in checks if check.check_id not in reused
+                check.check_id
+                for check in checks
+                if check.check_id not in reused and not check.discovery
             )
         ),
         credential_id=credential.id,
@@ -418,7 +423,29 @@ def run_named_checks_within_budget(
         for check in checks
         if (cached := reused.get(check.check_id)) is not None
     )
+    finished.extend(
+        _discovery_not_run_result(check)
+        for check in checks
+        if check.discovery and check.check_id not in reused
+    )
     return NamedCheckRun(finished_results=finished, unfinished_check_ids=unfinished)
+
+
+def _discovery_not_run_result(check: CapabilityCheck[Any]) -> CapabilityCheckResult:
+    return CapabilityCheckResult(
+        capability=check.capability,
+        check_id=check.check_id,
+        display_name=check.display_name,
+        required=False,
+        status=CapabilityCheckStatus.SKIPPED,
+        message=_DISCOVERY_NOT_RUN_MESSAGE,
+        is_fallback=check.is_fallback,
+        remediation=check.remediation,
+        docs_link=check.docs_link,
+        applicable=False,
+        validates_binding=check.validates_binding,
+        discovery=True,
+    )
 
 
 def validate_pairing_with_named_checks(

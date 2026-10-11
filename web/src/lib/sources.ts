@@ -334,7 +334,7 @@ export const SOURCE_METADATA_MAP: SourceMap = {
   zoom: {
     icon: SvgZoom,
     displayName: "Zoom",
-    category: SourceCategory.Messaging,
+    category: SourceCategory.Meetings,
   },
   gmail: {
     icon: SvgGmail,
@@ -396,7 +396,7 @@ export const SOURCE_METADATA_MAP: SourceMap = {
   fireflies: {
     icon: SvgFireflies,
     displayName: "Fireflies",
-    category: SourceCategory.Sales,
+    category: SourceCategory.Meetings,
     docs: `${DOCS_ADMINS_PATH}/connectors/official/fireflies`,
   },
   highspot: {
@@ -526,9 +526,7 @@ export function listSourceMetadata(): SourceMetadata[] {
         // user_file is for internal use (projects), not the Add Connector page
         source !== "user_file" &&
         // craft_file backs the Craft user library, which has its own upload UI
-        source !== "craft_file" &&
-        // TODO: unhide once the rest of the Zoom connector stack has merged
-        source !== "zoom"
+        source !== "craft_file"
     )
     .map(([source, metadata]) => {
       return fillSourceMetadata(metadata, source as ValidSources);

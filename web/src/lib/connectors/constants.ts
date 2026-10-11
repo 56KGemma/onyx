@@ -12,6 +12,7 @@ export const SOURCE_CATEGORY_LABEL_KEYS = {
   [SourceCategory.TicketingAndTaskManagement]:
     "categories.ticketingAndTaskManagement.label",
   [SourceCategory.Messaging]: "categories.messaging.label",
+  [SourceCategory.Meetings]: "categories.meetings.label",
   [SourceCategory.Sales]: "categories.sales.label",
   [SourceCategory.CodeRepository]: "categories.codeRepository.label",
   [SourceCategory.AiObservability]: "categories.aiObservability.label",
